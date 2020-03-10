@@ -1,0 +1,120 @@
+<html>
+<style>
+#dropbox {
+	display: block;
+	width: 100%;
+	height: 50%;
+	border-style: inset;
+	border-radius: 5px;
+    box-sizing: border-box;
+	border: 1px solid red;
+}
+#dropbox.highlight {
+	border: 10px solid red;
+}
+</style>
+<script>
+const ONE = ( q ) => { return document.querySelector( q ); }
+const foreach = ( items, action ) => {
+	Array.prototype.forEach.call( items, action );
+}
+function post( path, params, action )
+{
+	let data = new FormData();
+	for (const key in params) {
+		if (params.hasOwnProperty(key)) {
+			data.append( key, params[ key ] );
+		}
+	}
+	let xhr = new XMLHttpRequest();
+	xhr.open("POST", path, true);
+	xhr.onload = function ()
+	{
+		if ( action ) action( this.responseText );
+	};
+	xhr.send(data);
+}
+function TEXT( t ) { return document.createTextNode( t ); }
+function handle_error( error )
+{
+	if ( error.match( /invalid password/ ) )
+	{
+		window.localStorage.removeItem( "password" );
+		set_password();
+		return error + ", password changed, please try again";
+	}
+	return error;
+}
+function set_password()
+{
+	if ( window.location.search === "?reset" )
+	{
+		window.localStorage.removeItem( "password" );
+	}
+	while ( window.localStorage.getItem( "password" ) === null )
+	{
+		window.localStorage.setItem(
+			"password",
+			prompt( "please enter password:" )
+		);
+	}
+}
+function add_item( text )
+{
+	let p = document.createElement( 'p' );
+	p.appendChild( TEXT(text) );
+	ONE("body").appendChild( p );
+}
+window.onload = () => {
+	set_password();
+	let dropbox = ONE("#dropbox");
+	dropbox.ondragover = (e) => {
+		e.preventDefault();
+		e.stopPropagation();
+		dropbox.classList.add( "highlight" );
+	}
+	document.body.ondragover = (e) => {
+		dropbox.classList.remove( "highlight" );
+	}
+	dropbox.ondrop = (e) => {
+		e.preventDefault();
+		e.stopPropagation();
+		dropbox.classList.remove( "highlight" );
+		foreach(
+			e.dataTransfer.files,
+			( file ) => {
+				if ( !file.type.match( /image/ ) ) return;
+				let reader = new FileReader();
+				reader.onload = (e2) => {
+					const regex = /data:[^\/]+\/[^;]+;base64,/;
+					let data = e2.target.result.substr( regex.exec( e2.target.result )[ 0 ].length );
+					post(
+						"store.php",
+						{
+							"file":	data,
+							"filename": file.name,
+							"password": window.localStorage.getItem( "password" )
+						},
+						( text ) =>
+						{
+							let json = JSON.parse( text );
+							const path = window.location.origin + window.location.pathname;
+							add_item(
+								json.error ? handle_error( json.error ) :
+								"[url=" + path + json.prefix + json.original + "][img=" + path + json.prefix + json.forum + "][/img][/url]"
+							);
+						}
+					);
+				}
+				reader.onerror = (e2)=> console.log( e2 );
+				reader.readAsDataURL( file );
+			}
+		)
+	}
+}
+</script>
+<body>
+<div id="dropbox">
+</div>
+</body>
+</html>
