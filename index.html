@@ -101,7 +101,7 @@ window.onload = () => {
 							const path = window.location.origin + window.location.pathname;
 							add_item(
 								json.error ? handle_error( json.error ) :
-								"[url=" + path + json.prefix + json.original + "][img=" + path + json.prefix + json.forum + "][/img][/url]"
+								"[url=" + path + json.prefix + json.original + "][img]" + path + json.prefix + json.forum + "[/img][/url]"
 							);
 						}
 					);
