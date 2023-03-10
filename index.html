@@ -40,8 +40,7 @@ function handle_error( error )
 	if ( error.match( /invalid password/ ) )
 	{
 		window.localStorage.removeItem( "password" );
-		set_password();
-		return error + ", password changed, please try again";
+		return error + ", please refresh to enter new password";
 	}
 	return error;
 }
@@ -89,7 +88,7 @@ window.onload = () => {
 					const regex = /data:[^\/]+\/[^;]+;base64,/;
 					let data = e2.target.result.substr( regex.exec( e2.target.result )[ 0 ].length );
 					post(
-						"store.php",
+						"image_uploader_backend.cgi",
 						{
 							"file":	data,
 							"filename": file.name,
@@ -97,11 +96,11 @@ window.onload = () => {
 						},
 						( text ) =>
 						{
-							let json = JSON.parse( text );
+							const json = JSON.parse( text );
 							const path = window.location.origin + window.location.pathname;
 							add_item(
 								json.error ? handle_error( json.error ) :
-								"[url=" + path + json.prefix + json.original + "][img]" + path + json.prefix + json.forum + "[/img][/url]"
+								"[url=" + path + json.prefix + '/' + json.original + "][img]" + path + json.prefix + '/' + json.forum + "[/img][/url]"
 							);
 						}
 					);
