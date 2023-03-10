@@ -1,5 +1,0 @@
-<?php
-define( "STORAGE", "storage/" );
-define( "CONVERT", "/opt/local/bin/convert" );
-define( "PASSWORD", "my_safe_password" );
-?>
